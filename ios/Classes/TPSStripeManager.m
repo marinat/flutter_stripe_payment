@@ -862,6 +862,8 @@ void initializeTPSPaymentNetworksWithConditionalMappings() {
     [paymentRequest setPaymentSummaryItems:summaryItems];
     [paymentRequest setShippingMethods:shippingMethods];
     [paymentRequest setShippingType:shippingType];
+    //NSString* appID = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"];
+    //[paymentRequest setMerchantIdentifier:[@"merchant." stringByAppendingString:appID]];
 
     PKPaymentAuthorizationViewController *paymentAuthorizationVC = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
     paymentAuthorizationVC.delegate = self;
@@ -1234,8 +1236,21 @@ void initializeTPSPaymentNetworksWithConditionalMappings() {
     applePayCompletion = completion;
 
     STPAPIClient *stripeAPIClient = [self newAPIClient];
+    
+    [stripeAPIClient createPaymentMethodWithPayment:payment completion:^(STPPaymentMethod * _Nullable paymentMethod, NSError * _Nullable error) {
+        self->requestIsCompleted = YES;
+        
+        if (error) {
+            // Save for deffered use
+            self->applePayStripeError = error;
+            [self resolveApplePayCompletion:PKPaymentAuthorizationStatusFailure];
+        } else {
+            [self resolvePromise:[self convertPaymentMethod: paymentMethod]];
+            [self resolveApplePayCompletion:PKPaymentAuthorizationStatusSuccess];
+        }
+    }];
 
-    [stripeAPIClient createTokenWithPayment:payment completion:^(STPToken * _Nullable token, NSError * _Nullable error) {
+    /*[stripeAPIClient createTokenWithPayment:payment completion:^(STPToken * _Nullable token, NSError * _Nullable error) {
         self->requestIsCompleted = YES;
 
         if (error) {
@@ -1254,7 +1269,7 @@ void initializeTPSPaymentNetworksWithConditionalMappings() {
 
             [self resolvePromise:result];
         }
-    }];
+    }];*/
 }
 
 

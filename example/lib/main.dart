@@ -25,9 +25,9 @@ class _MyAppState extends State<MyApp> {
   ScrollController _controller = ScrollController();
 
   final CreditCard testCard = CreditCard(
-    number: '4000002760003184',
+    number: '4242424242424242',
     expMonth: 12,
-    expYear: 21,
+    expYear: 24,
   );
 
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
@@ -37,8 +37,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     StripePayment.setOptions(StripeOptions(
-        publishableKey: "pk_test_tdQjje7XHgi50bOfcR2F38Eq",
-        merchantId: "Test",
+        publishableKey: "pk_test_aSaULNS8cJU6Tvo20VAXy6rp",
+        merchantId: "novakid",
         androidPayMode: 'test'));
   }
 
@@ -199,32 +199,35 @@ class _MyAppState extends State<MyApp> {
             Divider(),
             RaisedButton(
               child: Text("Native payment method"),
-              onPressed: () {
+              onPressed: () async {
                 if (Platform.isIOS) {
                   _controller.jumpTo(450);
                 }
-                StripePayment.paymentRequestWithNativePay(
-                  androidPayOptions: AndroidPayPaymentRequest(
-                    totalPrice: "1",
-                    currencyCode: "USD",
-                    billingAddressRequired: true,
-                    shippingAddressRequired: true,
-                  ),
-                  applePayOptions: ApplePayPaymentOptions(
-                    countryCode: 'DE',
-                    currencyCode: 'EUR',
-                    items: [
-                      ApplePayItem(
-                        label: 'Test',
-                        amount: '13',
-                      )
-                    ],
-                  ),
-                ).then((paymentMethod) {
-                  setState(() {
-                    _paymentMethod = paymentMethod;
-                  });
-                }).catchError(setError);
+
+                try {
+                  _paymentMethod = await StripePayment.paymentRequestWithNativePay(
+                    androidPayOptions: AndroidPayPaymentRequest(
+                      totalPrice: "1",
+                      currencyCode: "USD",
+                      billingAddressRequired: true,
+                      shippingAddressRequired: true,
+                    ),
+                    applePayOptions: ApplePayPaymentOptions(
+                      countryCode: 'DE',
+                      currencyCode: 'EUR',
+                      items: [
+                        ApplePayItem(
+                          label: 'Test',
+                          amount: '1',
+                        )
+                      ],
+                    ),
+                  );
+                  debugPrint(_paymentMethod.toString());
+                  setState(() {});
+                } catch(e) {
+                  setError(e);
+                }
               },
             ),
             RaisedButton(
